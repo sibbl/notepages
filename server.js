@@ -4,7 +4,6 @@ var express = require('express')
   , _ = require('underscore')
   , app = express()
   , redis = require("redis")
-  , redis_client = redis.createClient()
   , port = process.env.PORT || 3000
   , db_path = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/techpages';
 
@@ -12,6 +11,15 @@ var express = require('express')
 // So we need this filter
 
 require('jade').filters.protect = function (text) { return text; }
+
+// Configure redis
+if(process.env.REDISTOGO_URL || process.env.REDISCLOUD_URL) {
+  var redisURL = require("url").parse(process.env.REDISTOGO_URL || process.env.REDISCLOUD_URL);
+  var redis_client = redis.createClient(redisURL.port, redisURL.hostname, {no_ready_check: true});
+  redis_client.auth(redisURL.auth.split(":")[1]);
+}else{
+  var redis_client = redis.createClient();
+}
 
 // Configuration
 
