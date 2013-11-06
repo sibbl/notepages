@@ -3,9 +3,8 @@ var express = require('express')
   , mongoose = require('mongoose')
   , _ = require('underscore')
   , app = express()
-  , redis = require("redis")
-  , redis_client = redis.createClient()
-  , port = process.env.PORT || 3000;;
+  , port = process.env.PORT || 3000
+  , db_path = process.env.MONGOLAB_URI || 'mongodb://localhost/techpages';
 
 // By default Jade will kill itself inside a MathJax configuration script
 // So we need this filter
@@ -48,7 +47,7 @@ _.extend(markdown.config, {
 
 // Mongoose connection and Model
 
-mongoose.connect(process.env.MONGOLAB_URI);
+mongoose.connect(db_path);
 
 var PageSchema = new mongoose.Schema({
   iden : { type: String, index: { unique: true } },
@@ -105,7 +104,6 @@ app.post(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, prePage, express.bodyParser(), fun
         post.text = req.body.text;
         post.save(function(err) {
           if (!err) res.send({status:"success",message:"Page updated."}, 200);
-          redis_client.del("page_" + post.iden);
         });
       }
     } else {
@@ -124,24 +122,8 @@ app.post(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, prePage, express.bodyParser(), fun
   });
 });
 
-function redisCache(req, res, next) {
-  if (req.params.extn != "html") {
-    next();
-    return;
-  }
-  
-  redis_client.exists("page_" + req.params.id, function (err, reply) {
-    if (reply) {
-      redis_client.hgetall("page_" + req.params.id, function (err, page) {
-        res.render('page', { page: page });
-      });
-    } else {
-      next();
-    }
-  });
-}
 
-app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req, res, next) {
+app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage], function(req, res, next) {
   var page = {
     pagename: req.params.id
   }
@@ -165,7 +147,6 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req
       } else {
         page.editing = "false";
         page.content = markdown.makeHtml(post.text);
-        redis_client.hmset("page_" + page.pagename, page);
       }
     } else {
       page.editing = "true";
@@ -181,10 +162,5 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req
 });
 
 // Start the server
-
-if (!module.parent) {
-  app.listen(port);
-  console.log("Express server listening on port %d", port);
-} else {
-  module.exports = app;
-}
+app.listen(port);
+console.log("Express server listening on port %d", port);
