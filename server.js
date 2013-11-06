@@ -48,7 +48,7 @@ _.extend(markdown.config, {
 
 // Mongoose connection and Model
 
-mongoose.connect('mongodb://localhost/techpages');
+mongoose.connect(process.env.MONGOLAB_URI);
 
 var PageSchema = new mongoose.Schema({
   iden : { type: String, index: { unique: true } },
