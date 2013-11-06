@@ -4,7 +4,7 @@ var express = require('express')
   , _ = require('underscore')
   , app = express()
   , port = process.env.PORT || 3000
-  , db_path = process.env.MONGOLAB_URI || 'mongodb://localhost/techpages';
+  , db_path = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/techpages';
 
 // By default Jade will kill itself inside a MathJax configuration script
 // So we need this filter
