@@ -3,6 +3,8 @@ var express = require('express')
   , mongoose = require('mongoose')
   , _ = require('underscore')
   , app = express()
+  , redis = require("redis")
+  , redis_client = redis.createClient()
   , port = process.env.PORT || 3000
   , db_path = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/techpages';
 
@@ -97,6 +99,7 @@ app.post(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, prePage, express.bodyParser(), fun
         post.text = req.body.text;
         post.save(function(err) {
           if (!err) res.send({status:"success",message:"Page updated."}, 200);
+          redis_client.del("page_" + post.iden);
         });
       }
     } else {
@@ -115,8 +118,25 @@ app.post(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, prePage, express.bodyParser(), fun
   });
 });
 
+function redisCache(req, res, next) {
+  if (req.params.extn != "html") {
+    next();
+    return;
+  }
+  
+  redis_client.exists("page_" + req.params.id, function (err, reply) {
+    if (reply) {
+      redis_client.hgetall("page_" + req.params.id, function (err, page) {
+        res.render('page', { page: page });
+      });
+    } else {
+      next();
+    }
+  });
+}
 
-app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage], function(req, res, next) {
+
+app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req, res, next) {
   var page = {
     pagename: req.params.id
   }
@@ -140,6 +160,7 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage], function(req, res, next)
       } else {
         page.editing = "false";
         page.content = markdown.makeHtml(post.text);
+        redis_client.hmset("page_" + page.pagename, page);
       }
     } else {
       page.editing = "true";
