@@ -2,7 +2,7 @@ var express = require('express')
   , markdown = new (require('./support/mdext/src/showdown').Showdown.converter)()
   , mongoose = require('mongoose')
   , _ = require('underscore')
-  , app = module.exports = express.createServer()
+  , app = express()
   , redis = require("redis")
   , redis_client = redis.createClient();
 
@@ -183,7 +183,7 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req
 
 if (!module.parent) {
   app.listen(8888);
-  console.log("Express server listening on port %d", app.address().port);
+  console.log("Express server listening on port %d", 8888);
 } else {
   module.exports = app;
 }
