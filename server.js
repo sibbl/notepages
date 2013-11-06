@@ -4,7 +4,8 @@ var express = require('express')
   , _ = require('underscore')
   , app = express()
   , redis = require("redis")
-  , redis_client = redis.createClient();
+  , redis_client = redis.createClient()
+  , port = process.env.PORT || 3000;;
 
 // By default Jade will kill itself inside a MathJax configuration script
 // So we need this filter
@@ -182,8 +183,8 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage, redisCache], function(req
 // Start the server
 
 if (!module.parent) {
-  app.listen(8888);
-  console.log("Express server listening on port %d", 8888);
+  app.listen(port);
+  console.log("Express server listening on port %d", port);
 } else {
   module.exports = app;
 }
