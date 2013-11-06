@@ -13,18 +13,11 @@ require('jade').filters.protect = function (text) { return text; }
 
 // Configuration
 
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.bodyParser());
-  //app.use(express.methodOverride());
-  //app.use(express.cookieParser());
-  //app.use(express.session({ secret: 'your secret here' }));
-  //app.use(express.compiler({ src: __dirname + '/public', enable: ['sass'] }));
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public', { maxAge: 7*24*60*60*1000 })); // 1 week cache
-  app.enable('view cache');
-});
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
+app.use(express.bodyParser());
+app.use(express.static(__dirname + '/public', { maxAge: 7*24*60*60*1000 })); // 1 week cache
+app.enable('view cache');
 
 app.configure('development', function(){
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
@@ -163,4 +156,4 @@ app.get(/^\/([a-zA-Z0-9_-]{2,})\.?(json)?$/, [prePage], function(req, res, next)
 
 // Start the server
 app.listen(port);
-console.log("Express server listening on port %d", port);
+console.log("Listening on port %d", port);
